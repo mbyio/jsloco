@@ -1,0 +1,55 @@
+{
+    "parser": "babel-eslint",
+    "plugins": [
+        "flowtype"
+    ],
+    "env": {
+        "browser": true,
+        "commonjs": true,
+        "es6": true
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+        "sourceType": "module"
+    },
+    "rules": {
+        "no-console": [
+            2,
+            {
+                "allow": ["log", "warn", "error"]
+            }
+        ],
+        "indent": [
+            2,
+            4
+        ],
+        "linebreak-style": [
+            2,
+            "unix"
+        ],
+        "quotes": [
+            2,
+            "single"
+        ],
+        "semi": [
+            2,
+            "always"
+        ],
+        "flowtype/require-parameter-type": 1,
+        "flowtype/require-return-type": [
+            1,
+            "always",
+            {
+                "annotateUndefined": "never"
+            }
+        ],
+        "flowtype/space-after-type-colon": [
+            1,
+            "always"
+        ],
+        "flowtype/space-before-type-colon": [
+            1,
+            "never"
+        ]
+    }
+}
