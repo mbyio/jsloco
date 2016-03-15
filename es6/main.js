@@ -2,26 +2,12 @@
 /*global Class*/
 
 import 'babel-polyfill';
-
-/**
- * The length in pixels of the side of a cell.
- */
-const CELL_SIZE = 16;
-
-/**
- * The width of the grid in cells.
- */
-const GRID_WIDTH = 50;
-
-/**
- * The height of the grid in cells.
- */
-const GRID_HEIGHT = 37;
+import * as config from './config.js';
 
 /**
  * A nice blue color.
  */
-const CORNFLOWER_BLUE = 'rgb(100,149,237)';
+export const CORNFLOWER_BLUE = 'rgb(100,149,237)';
 
 document.addEventListener('DOMContentLoaded', function() {
     if (document.readyState === 'interactive') {
@@ -66,8 +52,8 @@ class Game {
         this._isRunning = false;
 
         // Setup the display
-        let width = GRID_WIDTH * CELL_SIZE;
-        let height = GRID_HEIGHT * CELL_SIZE;
+        let width = config.GRID_WIDTH * config.CELL_SIZE;
+        let height = config.GRID_HEIGHT * config.CELL_SIZE;
         this._viewport = document.getElementById('gameViewport');
         this._viewport.style.width = `${width}px`;
         this._viewport.style.height = `${height}px`;
@@ -85,7 +71,8 @@ class Game {
         this._ctx = this._canvas.getContext('2d');
 
         // Setup grid
-        this._grid = new GridLayer(GRID_WIDTH, GRID_HEIGHT, CELL_SIZE);
+        this._grid = new GridLayer(
+            config.GRID_WIDTH, config.GRID_HEIGHT, config.CELL_SIZE);
 
         // Input
         this._input = new InputManager(this._viewport);
@@ -494,11 +481,8 @@ class GridLayer {
 /**
  * Order in which component update methods will be called.
  *
- * Placed at the bottom of the file so it occurs after requisite classes are
- * declared.
- *
  * TODO Come up with an object oriented way of doing this.
  */
-const COMPONENT_UPDATE_ORDER = [
+export const COMPONENT_UPDATE_ORDER = [
     CursorFeedbackComponent
 ];

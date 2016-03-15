@@ -1,16 +1,18 @@
 /*global __dirname*/
+
 const gulp = require('gulp');
 const eslint = require('gulp-eslint');
-const babel = require('gulp-babel');
-const browserify = require('gulp-browserify');
+const browserify = require('browserify');
 const http = require('http');
 const st = require('st');
 const livereload = require('gulp-livereload');
 const flow = require('flow-bin');
 const execFile = require('child_process').execFile;
+const source = require('vinyl-source-stream');
 
 var paths = {
     es6: 'es6/**/*.js',
+    es6Entry: 'es6/main.js',
     jsOut: 'dist/js/',
     html: 'html/**/*.html',
     htmlOut: 'dist/',
@@ -39,9 +41,12 @@ gulp.task('typeCheckJs', function(cb) {
 });
 
 gulp.task('compileJs', function() {
-    return gulp.src(paths.es6)
-    .pipe(babel())
-    .pipe(browserify())
+    return browserify(paths.es6Entry)
+    .transform('babelify')
+    .bundle()
+    // bundle returns a regular fs stream, source converts it into a vinyl
+    // stream, which is what gulp commands expect
+    .pipe(source('main.js'))
     .pipe(gulp.dest(paths.jsOut))
     .pipe(livereload());
 });
