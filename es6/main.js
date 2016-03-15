@@ -36,9 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function main() {
     let game = new Game();
     let e = game.makeEntity();
-    let img = new Image();
-    img.src = 'assets/lego-logo.jpg';
-    e.addComponent(new SpriteComponent(img));
+    e.addComponent(new SpriteComponent('assets/lego-logo.jpg'));
     e.x = 128;
     e.y = 128;
     game.start();
@@ -168,8 +166,10 @@ class Component {
 class SpriteComponent extends Component {
     _img: ?HTMLImageElement;
 
-    constructor(img: HTMLImageElement) {
+    constructor(src: string) {
         super();
+        let img = new Image();
+        img.src = src;
         // If the image is loaded, assign it to _img; otherwise wait until it is
         // loaded. Eventually this should be replaced with a real resource
         // management system.
