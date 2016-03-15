@@ -39,6 +39,9 @@ function main() {
     e.addComponent(new SpriteComponent('assets/lego-logo.jpg', 16, 16));
     e.x = 128;
     e.y = 128;
+    let mouseFollow = game.makeEntity();
+    mouseFollow.addComponent(new FillRectComponent('rgb(255,0,0)', 16, 16));
+    mouseFollow.addComponent(new CursorFeedbackComponent());
     game.start();
 }
 
@@ -56,6 +59,7 @@ class Game {
     _ctx: CanvasRenderingContext2D;
     _isRunning: boolean;
     _grid: GridLayer;
+    _input: InputManager;
 
     constructor() {
         this._entities = [];
@@ -67,7 +71,6 @@ class Game {
         this._viewport = document.getElementById('gameViewport');
         this._viewport.style.width = `${width}px`;
         this._viewport.style.height = `${height}px`;
-
         // Workaround a weird bug in Flow by explicity checking that canvas has
         // the right type. Don't change the order of the following instructions!
         // Flow will complain, probably because it is buggy.
@@ -82,8 +85,18 @@ class Game {
         this._ctx = this._canvas.getContext('2d');
 
         // Setup grid
-        this._grid = new GridLayer(GRID_WIDTH, GRID_HEIGHT);
+        this._grid = new GridLayer(GRID_WIDTH, GRID_HEIGHT, CELL_SIZE);
 
+        // Input
+        this._input = new InputManager(this._viewport);
+    }
+
+    getInput(): InputManager {
+        return this._input;
+    }
+
+    getGrid(): GridLayer {
+        return this._grid;
     }
 
     makeEntity() {
@@ -110,6 +123,22 @@ class Game {
      * Warning: do NOT call this method directly.
      */
     gameLoop() {
+        //////////////////// Updating  ////////////////////
+
+        // TODO this could be optimized using component systems
+        for (let i = 0; i < COMPONENT_UPDATE_ORDER.length; i++) {
+            let componentType = COMPONENT_UPDATE_ORDER[i];
+            for (let j = 0; j < this._entities.length; j++) {
+                let entity = this._entities[j];
+                let component = entity.getComponent(componentType);
+                if (component != null) {
+                    component.update();
+                }
+            }
+        }
+
+        //////////////////// Rendering ////////////////////
+
         // Clear the background
         this._ctx.fillStyle = CORNFLOWER_BLUE;
         this._ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
@@ -128,6 +157,9 @@ class Game {
         // Render anything with a sprite
         for (let i = 0; i < this._entities.length; i++) {
             let entity = this._entities[i];
+            if (!entity.isVisible()) {
+                continue;
+            }
             let sprite = entity.getComponent(SpriteComponent);
             if (sprite == null) {
                 continue;
@@ -144,9 +176,73 @@ class Game {
                 sprite.getHeight()
             );
         }
+        // Render anything with a fill rect
+        for (let i = 0; i < this._entities.length; i++) {
+            let entity = this._entities[i];
+            if (!entity.isVisible()) {
+                continue;
+            }
+            let fillRect = entity.getComponent(FillRectComponent);
+            if (fillRect == null) {
+                continue;
+            }
+            this._ctx.fillStyle = fillRect.getFillStyle();
+            this._ctx.fillRect(
+                entity.x,
+                entity.y - fillRect.getHeight(),
+                fillRect.getWidth(),
+                fillRect.getHeight()
+            );
+        }
 
         // Continue the loop
         window.requestAnimationFrame(this.gameLoop.bind(this));
+    }
+}
+
+/**
+ * Converts the usual browser event driven input into stateful input (which is
+ * much easier to program against in a game).
+ */
+class InputManager {
+    _mouseX: number;
+    _mouseY: number;
+    _mouseOnElement: boolean;
+
+    constructor(viewport: HTMLElement) {
+        this._mouseX = 0;
+        this._mouseY = 0;
+        this._mouseOnElement = false;
+
+        viewport.addEventListener('mousemove', (e: Event) => {
+            // flowtype can't infer that we'll receive a MouseEvent, so we have
+            // to check it at runtime.
+            if (!(e instanceof MouseEvent)) {
+                throw new Error('unexpected event type encountered.');
+            }
+            this._mouseX = e.clientX;
+            this._mouseY = e.clientY;
+        });
+
+        viewport.addEventListener('mouseenter', () => {
+            this._mouseOnElement = true;
+        });
+
+        viewport.addEventListener('mouseleave', () => {
+            this._mouseOnElement = false;
+        });
+    }
+
+    isMouseOnElement(): boolean {
+        return this._mouseOnElement;
+    }
+
+    getMouseX(): number {
+        return this._mouseX;
+    }
+
+    getMouseY(): number {
+        return this._mouseY;
     }
 }
 
@@ -171,6 +267,12 @@ class Component {
      * Called after the component has been attached to a component.
      */
     subInit() {
+    }
+
+    /**
+     * Called every frame in accordance with COMPONENT_UPDATE_ORDER.
+     */
+    update() {
     }
 }
 
@@ -216,6 +318,44 @@ class SpriteComponent extends Component {
     }
 }
 
+class FillRectComponent extends Component {
+    _fillStyle: string;
+    _width: number;
+    _height: number;
+
+    constructor(fillStyle: string, width: number, height: number) {
+        super();
+        this._fillStyle = fillStyle;
+        this._width = width;
+        this._height = height;
+    }
+
+    getFillStyle(): string {
+        return this._fillStyle;
+    }
+
+    getWidth(): number {
+        return this._width;
+    }
+
+    getHeight(): number {
+        return this._height;
+    }
+}
+
+class CursorFeedbackComponent extends Component {
+    update() {
+        let input = this._game.getInput();
+        let grid = this._game.getGrid();
+        let {x: gridX, y: gridY} = grid.pixelToGridCoords(
+            input.getMouseX(), input.getMouseY());
+        let {x: finalX, y: finalY} = grid.gridToPixelCoords(gridX, gridY);
+        this._entity.x = finalX;
+        this._entity.y = finalY;
+        this._entity.setVisibility(input.isMouseOnElement());
+    }
+}
+
 /**
  * An entity in the game world. It does not need to have a physical
  * representation. It contains components which provide behavior, visual, audio,
@@ -230,12 +370,14 @@ class SpriteComponent extends Component {
 class Entity {
     x: number;
     y: number;
+    _isVisible: boolean;
     _components: { [key: string]: Component };
     _game : Game;
 
     constructor(game: Game) {
         this._game = game;
         this._components = {};
+        this._isVisible = true;
         this.x = 0;
         this.y = 0;
     }
@@ -269,6 +411,14 @@ class Entity {
         this._components[comp.constructor.name] = comp;
         comp.init(this, this._game);
     }
+
+    isVisible(): boolean {
+        return this._isVisible;
+    }
+
+    setVisibility(v: boolean) {
+        this._isVisible = v;
+    }
 }
 
 /**
@@ -278,8 +428,9 @@ class Entity {
  */
 class GridLayer {
     _grid: Array<Array<?Entity>>;
+    _cellSize: number;
 
-    constructor(width: number, height: number) {
+    constructor(width: number, height: number, cellSize: number) {
         this._grid = [];
         for (let x = 0; x < width; x++) {
             let col = [];
@@ -288,6 +439,7 @@ class GridLayer {
             }
             this._grid.push(col);
         }
+        this._cellSize = cellSize;
     }
 
     get(x: number, y: number): ?Entity {
@@ -311,4 +463,42 @@ class GridLayer {
             }
         }
     }
+
+    /**
+     * Given pixel coordinates, returns the coordinates of the cell the pixel
+     * coordinates are within.
+     */
+    pixelToGridCoords(x: number, y: number): {x: number, y: number} {
+        if (x < 0 || x >= this._grid.length * this._cellSize ||
+                y < 0 || y >= this._grid[0].length * this._cellSize) {
+            throw new Error('Pixel coords out of bounds.');
+        }
+        return {
+            x: Math.floor(x / this._cellSize),
+            y: Math.floor(y / this._cellSize)
+        };
+    }
+
+    gridToPixelCoords(x: number, y: number): {x: number, y: number} {
+        if (x < 0 || x >= this._grid.length ||
+                y < 0 || y >= this._grid[0].length) {
+            throw new Error('Pixel coords out of bounds.');
+        }
+        return {
+            x: x * this._cellSize,
+            y: y * this._cellSize
+        };
+    }
 }
+
+/**
+ * Order in which component update methods will be called.
+ *
+ * Placed at the bottom of the file so it occurs after requisite classes are
+ * declared.
+ *
+ * TODO Come up with an object oriented way of doing this.
+ */
+const COMPONENT_UPDATE_ORDER = [
+    CursorFeedbackComponent
+];
