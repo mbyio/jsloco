@@ -29,6 +29,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+/**
+ * The main program entry method. Executes after the DOM is ready to be
+ * manipulated (but probably before it is rendered for the first time).
+ */
 function main() {
     let game = new Game();
     let e = game.makeEntity();
@@ -64,7 +68,7 @@ class Game {
         this._viewport = document.getElementById('gameViewport');
         this._viewport.style.width = `${width}px`;
         this._viewport.style.height = `${height}px`;
-        
+
         // Workaround a weird bug in Flow by explicity checking that canvas has
         // the right type. Don't change the order of the following instructions!
         // Flow will complain, probably because it is buggy.
@@ -85,10 +89,9 @@ class Game {
         return entity;
     }
 
-    getContext(): CanvasRenderingContext2D {
-        return this._ctx;
-    }
-
+    /**
+     * Starts the game.
+     */
     start() {
         if (this._isRunning) {
             throw new Error('This game has already started.');
@@ -97,6 +100,12 @@ class Game {
         this.gameLoop();
     }
 
+    /**
+     * The game loop. Continues indefinitely as long as requestAnimationFrame
+     * keeps firing.
+     *
+     * Warning: do NOT call this method directly.
+     */
     gameLoop() {
         // Clear the background
         this._ctx.fillStyle = CORNFLOWER_BLUE;
@@ -174,6 +183,9 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Get the sprite's image. Returns null/undefined if it isn't loaded yet.
+     */
     getImage(): ?HTMLImageElement {
         return this._img;
     }
@@ -203,6 +215,19 @@ class Entity {
         this.y = 0;
     }
 
+    /**
+     * Gets a component from the entity.
+     *
+     * @param kind: The constructor function that created the component you want
+     * to retrieve.
+     *
+     * Example:
+     *     let e = game.makeEntity();
+     *     let sprite = e.getComponent(SpriteComponent);
+     *     if (sprite != null) {
+     *         // do stuff with the component here
+     *     }
+     */
     getComponent<T: Component>(kind: Class<T>): ?T {
         let comp = this._components[kind.name];
         if (comp == null || comp instanceof kind) {
@@ -211,6 +236,10 @@ class Entity {
         throw Error('Component is of the wrong type.');
     }
 
+    /**
+     * Adds a component to the entity. Overwrites an existing component of the
+     * same type if the entity already has it.
+     */
     addComponent(comp: Component) {
         this._components[comp.constructor.name] = comp;
         comp.init(this, this._game);
