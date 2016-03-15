@@ -1,3 +1,4 @@
+/*global __dirname*/
 const gulp = require('gulp');
 const eslint = require('gulp-eslint');
 const babel = require('gulp-babel');
@@ -14,13 +15,12 @@ var paths = {
     html: 'html/**/*.html',
     htmlOut: 'dist/',
     out: 'dist'
-}
+};
 
 gulp.task('lintJs', function() {
     return gulp.src(paths.es6)
     .pipe(eslint())
-    .pipe(eslint.format())
-    .pipe(eslint.failAfterError());
+    .pipe(eslint.format());
 });
 
 gulp.task('typeCheckJs', function(cb) {
