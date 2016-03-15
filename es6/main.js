@@ -207,14 +207,24 @@ class InputManager {
             if (!(e instanceof MouseEvent)) {
                 throw new Error('unexpected event type encountered.');
             }
-            this._mouseX = e.clientX;
-            this._mouseY = e.clientY;
+            let rect = viewport.getBoundingClientRect();
+            let realX = e.clientX - rect.left;
+            let realY = e.clientY - rect.top;
+            if (realX < 0 || realX >= viewport.offsetWidth ||
+                    realY < 0 || realY >= viewport.offsetHeight) {
+                this._mouseOnElement = false;
+            } else {
+                this._mouseOnElement = true;
+            }
+            this._mouseX = realX;
+            this._mouseY = realY;
         });
 
+        // TODO check if these events are actually necessary - we might just be
+        // able to do everything in mousemove.
         viewport.addEventListener('mouseenter', () => {
             this._mouseOnElement = true;
         });
-
         viewport.addEventListener('mouseleave', () => {
             this._mouseOnElement = false;
         });
@@ -333,13 +343,17 @@ class FillRectComponent extends Component {
 class CursorFeedbackComponent extends Component {
     update() {
         let input = this._game.getInput();
+        if (!input.isMouseOnElement()) {
+            this._entity.setVisibility(false);
+            return;
+        }
+        this._entity.setVisibility(true);
         let grid = this._game.getGrid();
         let {x: gridX, y: gridY} = grid.pixelToGridCoords(
             input.getMouseX(), input.getMouseY());
         let {x: finalX, y: finalY} = grid.gridToPixelCoords(gridX, gridY);
         this._entity.x = finalX;
         this._entity.y = finalY;
-        this._entity.setVisibility(input.isMouseOnElement());
     }
 }
 
@@ -458,7 +472,7 @@ class GridLayer {
     pixelToGridCoords(x: number, y: number): {x: number, y: number} {
         if (x < 0 || x >= this._grid.length * this._cellSize ||
                 y < 0 || y >= this._grid[0].length * this._cellSize) {
-            throw new Error('Pixel coords out of bounds.');
+            throw new Error(`Pixel coords (${x},${y}) are out of bounds.`);
         }
         return {
             x: Math.floor(x / this._cellSize),
@@ -469,11 +483,11 @@ class GridLayer {
     gridToPixelCoords(x: number, y: number): {x: number, y: number} {
         if (x < 0 || x >= this._grid.length ||
                 y < 0 || y >= this._grid[0].length) {
-            throw new Error('Pixel coords out of bounds.');
+            throw new Error('Grid coords out of bounds.');
         }
         return {
             x: x * this._cellSize,
-            y: y * this._cellSize
+            y: y * this._cellSize + this._cellSize
         };
     }
 }
