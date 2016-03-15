@@ -32,8 +32,12 @@ document.addEventListener('DOMContentLoaded', function() {
 function main() {
     let game = new Game();
     let e = game.makeEntity();
-    e.addComponent(new HelloWorldComponent());
-    //let grid = new GridLayer(GRID_WIDTH, GRID_HEIGHT);
+    let img = new Image();
+    img.src = 'assets/lego-logo.jpg';
+    e.addComponent(new SpriteComponent(img));
+    e.x = 128;
+    e.y = 128;
+    game.start();
 }
 
 /**
@@ -48,9 +52,11 @@ class Game {
     _viewport: HTMLElement;
     _canvas: HTMLCanvasElement;
     _ctx: CanvasRenderingContext2D;
+    _isRunning: boolean;
 
     constructor() {
         this._entities = [];
+        this._isRunning = false;
 
         // Setup the display
         let width = GRID_WIDTH * CELL_SIZE;
@@ -71,14 +77,58 @@ class Game {
         this._canvas.width = width;
         this._canvas.height = height;
         this._ctx = this._canvas.getContext('2d');
-        this._ctx.fillStyle = CORNFLOWER_BLUE;
-        this._ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
     }
 
     makeEntity() {
         let entity = new Entity(this);
         this._entities.push(entity);
         return entity;
+    }
+
+    getContext(): CanvasRenderingContext2D {
+        return this._ctx;
+    }
+
+    start() {
+        if (this._isRunning) {
+            throw new Error('This game has already started.');
+        }
+
+        this.gameLoop();
+    }
+
+    gameLoop() {
+        // Clear the background
+        this._ctx.fillStyle = CORNFLOWER_BLUE;
+        this._ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
+
+        // Sort entities so they overlap properly
+        this._entities.sort((left, right) => {
+            if (left.y < right.y) {
+                return -1;
+            } else if (left.y === right.y) {
+                return 0;
+            } else {
+                return 1;
+            }
+        });
+
+        // Render anything with a sprite
+        for (let i = 0; i < this._entities.length; i++) {
+            let entity = this._entities[i];
+            let sprite = entity.getComponent(SpriteComponent);
+            if (sprite == null) {
+                continue;
+            }
+            let img = sprite.getImage();
+            if (img == null) {
+                continue;
+            }
+            this._ctx.drawImage(img, entity.x, entity.y - img.height);
+        }
+
+        // Continue the loop
+        window.requestAnimationFrame(this.gameLoop.bind(this));
     }
 }
 
@@ -106,9 +156,26 @@ class Component {
     }
 }
 
-class HelloWorldComponent extends Component {
-    subInit() {
-        console.log('Hello World');
+class SpriteComponent extends Component {
+    _img: ?HTMLImageElement;
+
+    constructor(img: HTMLImageElement) {
+        super();
+        // If the image is loaded, assign it to _img; otherwise wait until it is
+        // loaded. Eventually this should be replaced with a real resource
+        // management system.
+        if (img.complete) {
+            this._img = img;
+        } else {
+            this._img = null;
+            img.addEventListener('load', () => {
+                this._img = img;
+            });
+        }
+    }
+
+    getImage(): ?HTMLImageElement {
+        return this._img;
     }
 }
 
@@ -116,14 +183,24 @@ class HelloWorldComponent extends Component {
  * An entity in the game world. It does not need to have a physical
  * representation. It contains components which provide behavior, visual, audio,
  * etc. for this component.
+ *
+ * All entities have an (x,y) position. This may get moved into a component
+ * later, but for now it is for convenience.
+ *
+ * If an entity is on a grid, their x and y coordinates should be the lowest,
+ * leftmost point of their position on the grid.
  */
 class Entity {
+    x: number;
+    y: number;
     _components: { [key: string]: Component };
     _game : Game;
 
     constructor(game: Game) {
         this._game = game;
         this._components = {};
+        this.x = 0;
+        this.y = 0;
     }
 
     getComponent<T: Component>(kind: Class<T>): ?T {

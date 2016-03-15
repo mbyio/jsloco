@@ -14,6 +14,8 @@ var paths = {
     jsOut: 'dist/js/',
     html: 'html/**/*.html',
     htmlOut: 'dist/',
+    assets: 'assets/**/*',
+    assetsOut: 'dist/assets/',
     out: 'dist'
 };
 
@@ -52,10 +54,17 @@ gulp.task('copyHtml', function() {
     .pipe(livereload());
 });
 
+gulp.task('copyAssets', function() {
+    return gulp.src(paths.assets)
+    .pipe(gulp.dest(paths.assetsOut))
+    .pipe(livereload());
+});
+
 gulp.task('watch', ['server'], function() {
     livereload.listen({basePath: paths.out});
     gulp.watch(paths.es6, ['js']);
     gulp.watch(paths.html, ['copyHtml']);
+    gulp.watch(paths.assets, ['copyAssets']);
 });
 
 gulp.task('server', function(done) {
@@ -71,4 +80,4 @@ gulp.task('server', function(done) {
                 'refresh the page when changes occur.');
 });
 
-gulp.task('default', ['server', 'watch', 'js', 'copyHtml']);
+gulp.task('default', ['server', 'watch', 'js', 'copyHtml', 'copyAssets']);
