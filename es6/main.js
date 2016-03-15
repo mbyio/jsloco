@@ -126,8 +126,12 @@ class Entity {
         this._components = {};
     }
 
-    getComponent(kind: Class<Component>): Component {
-        return this._components[kind.name];
+    getComponent<T: Component>(kind: Class<T>): ?T {
+        let comp = this._components[kind.name];
+        if (comp == null || comp instanceof kind) {
+            return comp;
+        }
+        throw Error('Component is of the wrong type.');
     }
 
     addComponent(comp: Component) {
