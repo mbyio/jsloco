@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function main() {
     let game = new Game();
     let e = game.makeEntity();
-    e.addComponent(new SpriteComponent('assets/lego-logo.jpg'));
+    e.addComponent(new SpriteComponent('assets/lego-logo.jpg', 16, 16));
     e.x = 128;
     e.y = 128;
     game.start();
@@ -131,7 +131,13 @@ class Game {
             if (img == null) {
                 continue;
             }
-            this._ctx.drawImage(img, entity.x, entity.y - img.height);
+            this._ctx.drawImage(
+                img,
+                entity.x,
+                entity.y - sprite.getHeight(),
+                sprite.getWidth(),
+                sprite.getHeight()
+            );
         }
 
         // Continue the loop
@@ -165,9 +171,12 @@ class Component {
 
 class SpriteComponent extends Component {
     _img: ?HTMLImageElement;
+    _width: number;
+    _height: number;
 
-    constructor(src: string) {
+    constructor(src: string, width: number, height: number) {
         super();
+
         let img = new Image();
         img.src = src;
         // If the image is loaded, assign it to _img; otherwise wait until it is
@@ -181,6 +190,9 @@ class SpriteComponent extends Component {
                 this._img = img;
             });
         }
+
+        this._width = width;
+        this._height = height;
     }
 
     /**
@@ -188,6 +200,14 @@ class SpriteComponent extends Component {
      */
     getImage(): ?HTMLImageElement {
         return this._img;
+    }
+
+    getWidth(): number {
+        return this._width;
+    }
+
+    getHeight(): number {
+        return this._height;
     }
 }
 
