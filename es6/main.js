@@ -55,6 +55,7 @@ class Game {
     _canvas: HTMLCanvasElement;
     _ctx: CanvasRenderingContext2D;
     _isRunning: boolean;
+    _grid: GridLayer;
 
     constructor() {
         this._entities = [];
@@ -79,6 +80,10 @@ class Game {
         this._canvas.width = width;
         this._canvas.height = height;
         this._ctx = this._canvas.getContext('2d');
+
+        // Setup grid
+        this._grid = new GridLayer(GRID_WIDTH, GRID_HEIGHT);
+
     }
 
     makeEntity() {
@@ -272,41 +277,38 @@ class Entity {
  * etc.)
  */
 class GridLayer {
-    _grid: Array<Array<GridCell>>;
+    _grid: Array<Array<?Entity>>;
 
     constructor(width: number, height: number) {
         this._grid = [];
         for (let x = 0; x < width; x++) {
             let col = [];
             for (let y = 0; y < height; y++) {
-                col.push(new GridCell(this, x, y));
+                col.push(null);
             }
             this._grid.push(col);
         }
     }
-}
 
-class GridCell {
-    _x: number;
-    _y: number;
-    _layer: GridLayer;
-    _contents: Entity;
-
-    constructor(layer: GridLayer, x: number, y: number) {
-        this._layer = layer;
-        this._x = x;
-        this._y = y;
+    get(x: number, y: number): ?Entity {
+        if (x < 0 || x >= this._grid.length ||
+                y < 0 || y >= this._grid[0].length) {
+            throw new Error('Grid access out of bounds.');
+        }
+        return this._grid[x][y];
     }
 
-    getLayer(): GridLayer {
-        return this._layer;
-    }
-
-    getContents(): Entity {
-        return this._contents;
-    }
-
-    setContents(entity: Entity) {
-        this._contents = entity;
+    set(x: number, y: number, width: number, height: number, entity: Entity) {
+        if (x < 0 || x >= this._grid.length ||
+                y < 0 || y >= this._grid[0].length ||
+                width < 0 || x + width >= this._grid.length ||
+                height < 0 || y + height >= this._grid[0].length) {
+            throw new Error('Grid access out of bounds.');
+        }
+        for (let x1 = 0; x1 < x + width; x1++) {
+            for (let y1 = 0; y1 < y + height; y1++) {
+                this._grid[x1][y1] = entity;
+            }
+        }
     }
 }
