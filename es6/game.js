@@ -12,6 +12,163 @@ import {SpriteComponent, FillRectComponent} from './graphics.js';
  */
 const CORNFLOWER_BLUE = 'rgb(100,149,237)';
 
+class GameService {
+    run() {
+    }
+}
+
+/**
+ * Stores entities and the components associated with them.
+ */
+class EntityManager {
+    _componentGroups: {[key: string]: {[key: number]: Component}};
+    _entities: {[key: number]: boolean};
+    _entityIdCounter: number;
+
+    constructor() {
+        this._componentGroups = {};
+        this._entityIdCounter = 0;
+        this._entities = {};
+    }
+
+    _getComponentGroup(name: string): {[key: number]: Component} {
+        let group = this._componentGroups[name];
+        if (group == null) {
+            group = {};
+            this._componentGroups[name] = group;
+        }
+        return group;
+    }
+
+    makeEntity(): number {
+        this._entityIdCounter += 1;
+        this._entities[this._entityIdCounter] = true;
+        return this._entityIdCounter;
+    }
+
+    getComponentsByType<T: Component>(type: Class<T>): Array<Component> {
+        return Object.values(this._getComponentGroup(type.name));
+    }
+
+    addComponent<T: Component>(entity: number, type: Class<T>, args: Object) {
+        if (!this._entities[entity]) {
+            throw new Error(`Entity ${entity} doesn't exist.`);
+        }
+
+        let group = this._getComponentGroup(type.name);
+
+        if (group[entity] != null) {
+            throw new Error(`Entity ${entity} already has a ${type.name} component.`);
+        }
+
+        let component = new type(entity, args);
+        group[entity] = component;
+    }
+
+    getComponent<T: Component>(entity: number, type: Class<T>): ?T {
+        if (!this._entities[entity]) {
+            throw new Error(`Entity ${entity} doesn't exist.`);
+        }
+
+        let group = this._getComponentGroup(type.name);
+        return group[entity];
+    }
+}
+
+class Component {
+    _entity: number;
+
+    constructor(entity: number) {
+        this._entity = entity;
+    }
+
+    getEntity(): number {
+        return this._entity;
+    }
+}
+
+class ComponentSystem {
+    _game: Game;
+
+    constructor(game: Game) {
+        this._game = game;
+    }
+
+    getGame(): Game {
+        return this._game;
+    }
+
+    run() {
+    }
+}
+
+class Game {
+    _services: {[key: string]: GameService};
+    _executionOrder: Array<string>;
+    _running: boolean;
+
+    constructor() {
+        this._services = {};
+        this._running = false;
+    }
+
+    addService(service: GameService) {
+        let name = service.constructor.name;
+        if (this._services[name] != null) {
+            throw new Error(`A service of type ${name} is already present.`);
+        }
+        this._services[name] = service;
+    }
+
+    getService<T: GameService>(type: Class<T>): T {
+        let service = this._services[type.name];
+        if (service == null) {
+            throw new Error(`No ${type.name} service found.`);
+        }
+        if (!(service instanceof type)) {
+            throw new Error(`Service with name ${type.name} is not of that type.`);
+        }
+        return service;
+    }
+
+    start(executionOrder: Array<Object>) {
+        if (this._running) {
+            throw new Error('The game is already running.');
+        }
+        this._running = true;
+
+        // Verify the execution order makes sense
+        for (let i = 0; i < executionOrder.length; i++) {
+            let serviceClass = executionOrder[i];
+            if (serviceClass.name == null) {
+                throw new Error('Object in execution order is not a class.');
+            }
+            let service = this._services[serviceClass.name];
+            if (service == null) {
+                throw new Error(`Service of type ${serviceClass.name} does not exist.`);
+            }
+            if (!(service instanceof serviceClass)) {
+                throw new Error(`Object stored for ${serviceClass.name} service is not of the correct type.`);
+            }
+        }
+        this._executionOrder = executionOrder.map((o) => o.name);
+
+        this._gameLoop();
+    }
+
+    _gameLoop() {
+        for (let i = 0; i < this._executionOrder.length; i++) {
+            let serviceName = this._executionOrder[i];
+            let service = this._services[serviceName];
+            if (service == null) {
+                throw new Error('Service in execution order not found.');
+            }
+            service.run();
+        }
+        window.requestAnimationFrame(this._gameLoop.bind(this));
+    }
+}
+
 /**
  * An entity in the game world. It does not need to have a physical
  * representation. It contains components which provide behavior, visual, audio,
