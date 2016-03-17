@@ -1,8 +1,12 @@
 /* @flow */
 
 import 'babel-polyfill';
-import {Game, RunnableGameService} from './game.js';
-import {EntityManager, Component} from './entities.js';
+import {Game} from './game.js';
+import {EntityManager} from './entities.js';
+import {ViewportService} from './ui.js';
+import {PositionComponent} from './position.js';
+import {VisibleComponent, FillRectComponent, RenderingService} from './graphics.js';
+import {CORNFLOWER_BLUE} from './color.js';
 
 document.addEventListener('DOMContentLoaded', function() {
     if (document.readyState === 'interactive') {
@@ -18,41 +22,17 @@ function main() {
     let game = new Game();
     let entityManager = new EntityManager();
     game.addService(entityManager);
-    game.addService(new HelloWorldService());
+    game.addService(new RenderingService());
+    game.addService(new ViewportService());
 
     entityManager.makeEntity([
-        {type: HelloWorldComponent, args: {}}
-    ]);
-    entityManager.makeEntity([
-        {type: HelloWorldComponent, args: {}}
-    ]);
-    entityManager.makeEntity([
-        {type: HelloWorldComponent, args: {}}
+        {type: VisibleComponent, args: {}},
+        {type: PositionComponent, args: {}},
+        {type: FillRectComponent, args: {
+            width: 50, height: 50, color: CORNFLOWER_BLUE}}
     ]);
 
-    game.start([HelloWorldService]);
-}
-
-class HelloWorldComponent extends Component {
-    constructor(entity: number) {
-        super(entity);
-    }
-}
-
-class HelloWorldService extends RunnableGameService {
-    _entities: EntityManager;
-
-    subInit() {
-        this._entities = this._game.getService(EntityManager);
-    }
-
-    run() {
-        let components = this._entities.getComponentsByType(HelloWorldComponent);
-        for (let i = 0; i < components.length; i++) {
-            let entity = components[i].getEntity();
-            console.log(`Hello World from ${entity}.`);
-        }
-    }
+    game.start([RenderingService]);
 }
 
 //class CursorFeedbackComponent extends Component {
