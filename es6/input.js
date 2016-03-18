@@ -1,13 +1,18 @@
+import {GameService} from './game.js';
+import {ViewportService} from './ui.js';
+
 /**
  * Converts the usual browser event driven input into stateful input (which is
  * much easier to program against in a game).
  */
-export default class InputManager {
+export class InputManager extends GameService {
     _mouseX: number;
     _mouseY: number;
     _mouseOnElement: boolean;
 
-    constructor(viewport: HTMLElement) {
+    subInit() {
+        let viewport = this._game.getService(ViewportService).getViewport();
+
         this._mouseX = 0;
         this._mouseY = 0;
         this._mouseOnElement = false;

@@ -56,6 +56,14 @@ export class EntityManager extends GameService {
         return values;
     }
 
+    getComponentByType<T: Component>(type: Class<T>): ?T {
+        let comps = this.getComponentsByType(type);
+        if (comps.length > 1) {
+            throw new Error(`More than one entity has a component of type ${type.name}.`);
+        }
+        return comps[0];
+    }
+
     addComponent<T: Component>(entity: number, type: Class<T>, args: Object) {
         if (!this._entities[entity]) {
             throw new Error(`Entity ${entity} doesn't exist.`);
@@ -85,9 +93,10 @@ export class Component {
     _entity: number;
     _entityManager: EntityManager;
 
-    constructor(entity: number, entityManager: EntityManager) {
+    constructor(entity: number, entityManager: EntityManager, args: Object) {
         this._entity = entity;
         this._entityManager = entityManager;
+        args;
     }
 
     getEntity(): number {

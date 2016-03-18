@@ -8,7 +8,7 @@ export class PositionComponent extends Component {
 
     constructor(entity: number, entityManager: EntityManager,
                 args: {x: number, y: number}) {
-        super(entity, entityManager);
+        super(entity, entityManager, args);
         this.x = args.x || 0;
         this.y = args.y || 0;
     }

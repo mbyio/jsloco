@@ -11,7 +11,7 @@ export class Color {
         this.a = a;
     }
 
-    toCSS(): string {
+    toCss(): string {
         return `rgba(${this.r},${this.g},${this.b},${this.a})`;
     }
 
@@ -21,3 +21,5 @@ export class Color {
 }
 
 export const CORNFLOWER_BLUE = new Color(100, 149, 237, 255);
+
+export const ARMY_GREEN = new Color(29, 33, 13, 255);

@@ -1,27 +1,40 @@
-import {Entity} from './game.js';
+/* @flow */
+
+import {GameService} from './game.js';
 
 /**
  * A layer of the grid. May contain entities. Some entities might be in more
  * than one cell at the same time (ie. entities might be rectangular, square,
  * etc.)
  */
-export class GridLayer {
-    _grid: Array<Array<?Entity>>;
+export class GridManager extends GameService {
+    _grid: Array<Array<?number>>;
+    _cellSize: number;
+    _width: number;
+    _height: number;
     _cellSize: number;
 
     constructor(width: number, height: number, cellSize: number) {
+        // triggers a bug in eslint
+        super();
+
+        this._width = width;
+        this._height = height;
+        this._cellSize = cellSize;
+    }
+
+    subInit() {
         this._grid = [];
-        for (let x = 0; x < width; x++) {
+        for (let x = 0; x < this._width; x++) {
             let col = [];
-            for (let y = 0; y < height; y++) {
+            for (let y = 0; y < this._height; y++) {
                 col.push(null);
             }
             this._grid.push(col);
         }
-        this._cellSize = cellSize;
     }
 
-    get(x: number, y: number): ?Entity {
+    get(x: number, y: number): ?number {
         if (x < 0 || x >= this._grid.length ||
                 y < 0 || y >= this._grid[0].length) {
             throw new Error('Grid access out of bounds.');
@@ -29,7 +42,7 @@ export class GridLayer {
         return this._grid[x][y];
     }
 
-    set(x: number, y: number, width: number, height: number, entity: Entity) {
+    set(x: number, y: number, width: number, height: number, entity: number) {
         if (x < 0 || x >= this._grid.length ||
                 y < 0 || y >= this._grid[0].length ||
                 width < 0 || x + width >= this._grid.length ||
