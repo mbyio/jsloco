@@ -3,9 +3,9 @@
 import 'babel-polyfill';
 import {Game} from './game.js';
 import {EntityManager} from './entities.js';
-import {ViewportService} from './ui.js';
+import {ViewportService, ToolboxService} from './ui.js';
 import {PositionComponent} from './position.js';
-import {VisibleComponent, StaticSpriteComponent, RenderingService, ClearCanvasService} from './graphics.js';
+import {VisibleComponent, StaticSpriteComponent, RenderingService, ClearCanvasService, FillRectComponent} from './graphics.js';
 import {CursorFeedbackComponent, CursorFeedbackService} from './cursor_feedback.js';
 import {InputManager} from './input.js';
 import {ARMY_GREEN} from './color.js';
@@ -33,13 +33,15 @@ function main() {
     game.addService(new ClearCanvasService(ARMY_GREEN));
     game.addService(new GridManager(
         config.GRID_WIDTH, config.GRID_HEIGHT, config.CELL_SIZE));
+    game.addService(new ToolboxService());
 
     entityManager.makeEntity([
         {type: VisibleComponent, args: {}},
         {type: PositionComponent, args: {}},
         {type: StaticSpriteComponent, args: {
             src: 'assets/lego-logo.jpg', width: 16, height: 16}},
-        {type: CursorFeedbackComponent, args: {}}
+        {type: CursorFeedbackComponent, args: {}},
+        {type: FillRectComponent, args: {width: 16, height: 16}}
     ]);
 
     game.start([CursorFeedbackService, ClearCanvasService, RenderingService]);

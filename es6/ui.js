@@ -45,3 +45,44 @@ export class ViewportService extends GameService {
         return this._ctx;
     }
 }
+
+export const TOOLBOX_TOOLS = {
+    BIG: 'BIG',
+    SMALL: 'SMALL',
+    DELETE: 'DELETE'
+};
+
+export class ToolboxService extends GameService {
+    _selectedTool: string;
+    _buttons: {[key: string]: HTMLButtonElement};
+
+    subInit() {
+        let toolboxDiv = document.getElementById('toolbox');
+        if (toolboxDiv == null) {
+            throw new Error('Could not find toolbox container.');
+        }
+
+        this._buttons = {};
+        for (let buttonName of Object.keys(TOOLBOX_TOOLS)) {
+            let button = document.createElement('button');
+            if (!(button instanceof HTMLButtonElement)) {
+                throw new Error('Could not create button.');
+            }
+            button.innerHTML = buttonName.toLowerCase();
+            button.addEventListener('click', () => {
+                let oldButton = this._buttons[this._selectedTool];
+                if (oldButton != null) {
+                    oldButton.disabled = false;
+                }
+                this._selectedTool = TOOLBOX_TOOLS[buttonName];
+                button.disabled = true;
+            });
+            toolboxDiv.appendChild(button);
+            this._buttons[TOOLBOX_TOOLS[buttonName]] = button;
+        }
+    }
+
+    getSelectedTool(): ?string {
+        return this._selectedTool;
+    }
+}

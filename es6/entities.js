@@ -106,4 +106,12 @@ export class Component {
     getOtherComponent<T: Component>(type: Class<T>): ?T {
         return this._entityManager.getComponent(this._entity, type);
     }
+
+    requireOtherComponent<T: Component>(type: Class<T>): T {
+        let component = this.getOtherComponent(type);
+        if (component == null) {
+            throw new Error(`Component of type ${type.name} not found.`);
+        }
+        return component;
+    }
 }

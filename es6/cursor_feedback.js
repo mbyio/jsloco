@@ -7,8 +7,12 @@ import {PositionComponent} from './position.js';
 import {VisibleComponent} from './graphics.js';
 import {ViewportService} from './ui.js';
 import {GridManager} from './grid.js';
-import {StaticSpriteComponent} from './graphics.js';
+import {StaticSpriteComponent, FillRectComponent} from './graphics.js';
+import {ToolboxService, TOOLBOX_TOOLS} from './ui.js';
+import {Color} from './color.js';
 import * as config from './config.js';
+
+const DELETE_COLOR = new Color(255, 0, 0, 150);
 
 export class CursorFeedbackComponent extends Component {
 }
@@ -18,12 +22,14 @@ export class CursorFeedbackService extends RunnableGameService {
     _inputManager: InputManager;
     _viewportService: ViewportService;
     _gridManager: GridManager;
+    _toolbox: ToolboxService;
 
     subInit() {
         this._entityManager = this._game.getService(EntityManager);
         this._inputManager = this._game.getService(InputManager);
         this._viewportService = this._game.getService(ViewportService);
         this._gridManager = this._game.getService(GridManager);
+        this._toolbox = this._game.getService(ToolboxService);
     }
 
     run() {
@@ -39,6 +45,35 @@ export class CursorFeedbackService extends RunnableGameService {
             cursorFollower.getOtherComponent(VisibleComponent);
         if (visibleComponent != null) {
             visibleComponent.isVisible = isOnElement;
+        }
+        if (!isOnElement) {
+            return;
+        }
+
+        // Set size
+        let sprite = cursorFollower.requireOtherComponent(StaticSpriteComponent);
+        let fillRect = cursorFollower.requireOtherComponent(FillRectComponent);
+        switch (this._toolbox.getSelectedTool()) {
+        case TOOLBOX_TOOLS.BIG:
+            sprite.isEnabled = true;
+            fillRect.isEnabled = false;
+            sprite.width = 32;
+            sprite.height = 32;
+            break;
+        case TOOLBOX_TOOLS.SMALL:
+            sprite.isEnabled = true;
+            fillRect.isEnabled = false;
+            sprite.width = 16;
+            sprite.height = 16;
+            break;
+        case TOOLBOX_TOOLS.DELETE:
+            sprite.isEnabled = false;
+            fillRect.isEnabled = true;
+            fillRect.color = DELETE_COLOR;
+            break;
+        default:
+            sprite.isEnabled = false;
+            fillRect.isEnabled = false;
         }
 
         // Set position

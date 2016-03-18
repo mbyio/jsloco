@@ -6,29 +6,6 @@ import {RunnableGameService} from './game.js';
 import {ViewportService} from './ui.js';
 import {PositionComponent} from './position.js';
 
-export class VisibleComponent extends Component {
-    isVisible: boolean;
-
-    constructor(entity: number, entityManager: EntityManager,
-                args: {isVisible: boolean}) {
-        super(entity, entityManager, args);
-        this.isVisible = args.isVisible || true;
-    }
-}
-
-export class FillRectComponent extends Component {
-    width: number;
-    height: number;
-    color: Color;
-
-    constructor(entity: number, entityManager: EntityManager,
-                args: {width: number, height: number, color: Color}) {
-        super(entity, entityManager, args);
-        this.width = args.width || 0;
-        this.height = args.height || 0;
-        this.color = (args.color || CORNFLOWER_BLUE).clone();
-    }
-}
 
 export class RenderingService extends RunnableGameService {
     _viewportService: ViewportService;
@@ -52,10 +29,18 @@ export class RenderingService extends RunnableGameService {
             if (!position) {
                 return null;
             }
+            let fillRect = v.getOtherComponent(FillRectComponent);
+            if (fillRect && !fillRect.isEnabled) {
+                fillRect = null;
+            }
+            let staticSprite = v.getOtherComponent(StaticSpriteComponent);
+            if (staticSprite && !staticSprite.isEnabled) {
+                staticSprite = null;
+            }
             return {
                 position: position,
-                fillRect: v.getOtherComponent(FillRectComponent),
-                staticSprite: v.getOtherComponent(StaticSpriteComponent)
+                fillRect: fillRect,
+                staticSprite: staticSprite
             };
         });
         // Sort so they overlap correctly
@@ -129,14 +114,30 @@ export class ClearCanvasService extends RunnableGameService {
     }
 }
 
-export class StaticSpriteComponent extends Component {
+export class DisableableComponent extends Component {
+    isEnabled: boolean;
+
+    constructor(entity: number, entityManager: EntityManager,
+                args: Object) {
+        super(entity, entityManager, args);
+        if (args.isEnabled != null) {
+            this.isEnabled = args.isEnabled;
+        } else {
+            this.isEnabled = true;
+        }
+    }
+}
+
+export class StaticSpriteComponent extends DisableableComponent {
     src: string;
     image: ?HTMLImageElement;
     width: ?number;
     height: ?number;
+    isEnabled: boolean;
 
     constructor(entity: number, entityManager: EntityManager,
-                args: {width: number, height: number, src: string}) {
+                args: {width: number, height: number, src: string,
+                    isEnabled: boolean}) {
         super(entity, entityManager, args);
 
         this.width = args.width || null;
@@ -149,5 +150,29 @@ export class StaticSpriteComponent extends Component {
                 this.image = image;
             });
         }
+    }
+}
+
+export class VisibleComponent extends Component {
+    isVisible: boolean;
+
+    constructor(entity: number, entityManager: EntityManager,
+                args: {isVisible: boolean}) {
+        super(entity, entityManager, args);
+        this.isVisible = args.isVisible || true;
+    }
+}
+
+export class FillRectComponent extends DisableableComponent {
+    width: number;
+    height: number;
+    color: Color;
+
+    constructor(entity: number, entityManager: EntityManager,
+                args: {width: number, height: number, color: Color}) {
+        super(entity, entityManager, args);
+        this.width = args.width || 0;
+        this.height = args.height || 0;
+        this.color = (args.color || CORNFLOWER_BLUE).clone();
     }
 }
