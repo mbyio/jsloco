@@ -1,6 +1,12 @@
 import {GameService} from './game.js';
 import {ViewportService} from './ui.js';
 
+export const MOUSE_BUTTONS = {
+    LEFT: 1,
+    MIDDLE: 2,
+    RIGHT: 3
+};
+
 /**
  * Converts the usual browser event driven input into stateful input (which is
  * much easier to program against in a game).
@@ -9,6 +15,7 @@ export class InputManager extends GameService {
     _mouseX: number;
     _mouseY: number;
     _mouseOnElement: boolean;
+    _mouseButtonStates: {[key: number]: boolean}
 
     subInit() {
         let viewport = this._game.getService(ViewportService).getViewport();
@@ -16,6 +23,7 @@ export class InputManager extends GameService {
         this._mouseX = 0;
         this._mouseY = 0;
         this._mouseOnElement = false;
+        this._mouseButtonStates = {};
 
         viewport.addEventListener('mousemove', (e: Event) => {
             // flowtype can't infer that we'll receive a MouseEvent, so we have
@@ -36,13 +44,35 @@ export class InputManager extends GameService {
             this._mouseY = realY;
         });
 
-        // TODO check if these events are actually necessary - we might just be
-        // able to do everything in mousemove.
         viewport.addEventListener('mouseenter', () => {
             this._mouseOnElement = true;
         });
         viewport.addEventListener('mouseleave', () => {
             this._mouseOnElement = false;
+        });
+
+        viewport.addEventListener('mousedown', (e) => {
+            if (!(e instanceof MouseEvent)) {
+                throw new Error('unexpected event type encountered.');
+            }
+            if (e.which === 0) {
+                throw new Error('no button pressed?');
+            }
+            console.log('mousedown');
+            this._mouseButtonStates[e.which] = true;
+            return false;
+        });
+
+        viewport.addEventListener('mouseup', (e) => {
+            if (!(e instanceof MouseEvent)) {
+                throw new Error('unexpected event type encountered.');
+            }
+            if (e.which === 0) {
+                throw new Error('no button pressed?');
+            }
+            console.log('mouseup');
+            this._mouseButtonStates[e.which] = false;
+            return false;
         });
     }
 
@@ -56,5 +86,9 @@ export class InputManager extends GameService {
 
     getMouseY(): number {
         return this._mouseY;
+    }
+
+    getMouseButtonState(id: number): boolean {
+        return !!this._mouseButtonStates[id];
     }
 }

@@ -34,23 +34,42 @@ export class GridManager extends GameService {
         }
     }
 
+    isInBounds(x: number, y: number, width: ?number, height: ?number): boolean {
+        width = width || 1;
+        height = height || 1;
+        return !(x < 0 || x >= this._grid.length ||
+                y < 0 || y >= this._grid[0].length ||
+                x + width - 1 >= this._grid.length ||
+                y + height - 1 >= this._grid[0].length);
+    }
+
     get(x: number, y: number): ?number {
-        if (x < 0 || x >= this._grid.length ||
-                y < 0 || y >= this._grid[0].length) {
+        if (!this.isInBounds(x, y)) {
             throw new Error('Grid access out of bounds.');
         }
         return this._grid[x][y];
     }
 
-    set(x: number, y: number, width: number, height: number, entity: number) {
-        if (x < 0 || x >= this._grid.length ||
-                y < 0 || y >= this._grid[0].length ||
-                width < 0 || x + width >= this._grid.length ||
-                height < 0 || y + height >= this._grid[0].length) {
+    isAreaEmpty(x: number, y: number, width: number, height: number): boolean {
+        if (!this.isInBounds(x, y, width, height)) {
             throw new Error('Grid access out of bounds.');
         }
-        for (let x1 = 0; x1 < x + width; x1++) {
-            for (let y1 = 0; y1 < y + height; y1++) {
+        for (let x1 = x; x1 < x + width; x1++) {
+            for (let y1 = y; y1 < y + height; y1++) {
+                if (this._grid[x1][y1] != null) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    set(x: number, y: number, width: number, height: number, entity: number) {
+        if (!this.isInBounds(x, y, width, height)) {
+            throw new Error('Grid access out of bounds.');
+        }
+        for (let x1 = x; x1 < x + width; x1++) {
+            for (let y1 = y; y1 < y + height; y1++) {
                 this._grid[x1][y1] = entity;
             }
         }
