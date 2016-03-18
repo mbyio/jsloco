@@ -37,8 +37,8 @@ export class EntityManager extends GameService {
 
         // Create all requested components
         if (components != null) {
-            for (let i = 0; i < components.length; i++) {
-                let {type: type, args: args} = components[i];
+            for (let component of components) {
+                let {type: type, args: args} = component;
                 this.addComponent(this._entityIdCounter, type, args);
             }
         }
@@ -48,8 +48,8 @@ export class EntityManager extends GameService {
 
     getComponentsByType<T: Component>(type: Class<T>): Array<T> {
         let values = util.mapValues(this._getComponentGroup(type.name));
-        for (let i = 0; i < values.length; i++) {
-            if (!(values[i] instanceof type)) {
+        for (let value of values) {
+            if (!(value instanceof type)) {
                 throw new Error(`Component associated with ${type.name} is not of that type.`);
             }
         }

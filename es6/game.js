@@ -57,8 +57,7 @@ export class Game {
         this._running = true;
 
         // Verify the execution order makes sense
-        for (let i = 0; i < executionOrder.length; i++) {
-            let serviceClass = executionOrder[i];
+        for (let serviceClass of executionOrder) {
             if (serviceClass.name == null) {
                 throw new Error('Object in execution order is not a class.');
             }
@@ -74,8 +73,7 @@ export class Game {
 
         // Init everything
         let allServices = util.mapValues(this._services);
-        for (let i = 0; i < allServices.length; i++) {
-            let service = allServices[i];
+        for (let service of allServices) {
             service.init(this);
         }
 
@@ -83,8 +81,7 @@ export class Game {
     }
 
     _gameLoop() {
-        for (let i = 0; i < this._executionOrder.length; i++) {
-            let serviceName = this._executionOrder[i];
+        for (let serviceName of this._executionOrder) {
             let service = this._services[serviceName];
             if (service == null) {
                 throw new Error('Service in execution order not found.');

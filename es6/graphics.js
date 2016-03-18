@@ -75,8 +75,7 @@ export class RenderingService extends RunnableGameService {
             return 1;
         });
         // Render
-        for (let i = 0; i < renderables.length; i++) {
-            let renderable = renderables[i];
+        for (let renderable of renderables) {
             if (!renderable) {
                 continue;
             }
