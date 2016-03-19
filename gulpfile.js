@@ -1,18 +1,14 @@
 /*global __dirname*/
 
 const gulp = require('gulp');
-const eslint = require('gulp-eslint');
-const browserify = require('browserify');
 const http = require('http');
 const st = require('st');
 const livereload = require('gulp-livereload');
-const flow = require('flow-bin');
-const execFile = require('child_process').execFile;
-const source = require('vinyl-source-stream');
+const ts = require('gulp-typescript');
+const tslint = require('gulp-tslint');
 
 var paths = {
-    es6: 'es6/**/*.js',
-    es6Entry: 'es6/main.js',
+    ts: 'ts/**/*.ts',
     jsOut: 'dist/js/',
     html: 'html/**/*.html',
     htmlOut: 'dist/',
@@ -21,37 +17,22 @@ var paths = {
     out: 'dist'
 };
 
-gulp.task('lintJs', function() {
-    return gulp.src(paths.es6)
-    .pipe(eslint())
-    .pipe(eslint.format());
+gulp.task('tslint', function() {
+    return gulp.src(paths.ts)
+    .pipe(tslint())
+    .pipe(tslint.report('verbose', {
+        emitError: false
+    }));
 });
 
-gulp.task('typeCheckJs', function(cb) {
-    execFile(flow, ['--color=always'], function(err, stdout) {
-        if (stdout) {
-            console.log(stdout);
-        }
-        if (err) {
-            cb(err);
-        } else {
-            cb();
-        }
-    });
+gulp.task('js', ['tslint'], function() {
+    return gulp.src(paths.ts)
+    .pipe(ts({
+        noImplicitAny: true,
+        out: 'main.js'
+    }))
+    .pipe(gulp.dest(paths.jsOut));
 });
-
-gulp.task('compileJs', function() {
-    return browserify(paths.es6Entry)
-    .transform('babelify')
-    .bundle()
-    // bundle returns a regular fs stream, source converts it into a vinyl
-    // stream, which is what gulp commands expect
-    .pipe(source('main.js'))
-    .pipe(gulp.dest(paths.jsOut))
-    .pipe(livereload());
-});
-
-gulp.task('js', ['lintJs', 'typeCheckJs', 'compileJs']);
 
 gulp.task('copyHtml', function() {
     return gulp.src(paths.html)
@@ -67,7 +48,7 @@ gulp.task('copyAssets', function() {
 
 gulp.task('watch', ['server'], function() {
     livereload.listen({basePath: paths.out});
-    gulp.watch(paths.es6, ['js']);
+    gulp.watch(paths.ts, ['js']);
     gulp.watch(paths.html, ['copyHtml']);
     gulp.watch(paths.assets, ['copyAssets']);
 });
