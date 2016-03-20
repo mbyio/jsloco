@@ -1,3 +1,5 @@
+/// <reference path="game.ts" />
+
 document.addEventListener("DOMContentLoaded", function() {
     if (document.readyState === "interactive") {
         main();
@@ -5,5 +7,5 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 function main() {
-    console.log("Hello world!");
+    let game = new Game();
 }
