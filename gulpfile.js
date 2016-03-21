@@ -29,7 +29,8 @@ gulp.task('js', ['tslint'], function() {
     return gulp.src(paths.ts)
     .pipe(ts({
         noImplicitAny: true,
-        out: 'main.js'
+        out: 'main.js',
+        target: 'ES5'
     }))
     .pipe(gulp.dest(paths.jsOut));
 });
