@@ -1,4 +1,4 @@
-/// <reference path="game.ts" />
+/// <reference path="services.ts" />
 
 document.addEventListener("DOMContentLoaded", function() {
     if (document.readyState === "interactive") {
