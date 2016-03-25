@@ -52,6 +52,15 @@ class EntityService implements Service {
         return componentCollection[entity.id] as T;
     }
 
+    requireComponent<T extends Component>(
+            entity: Entity, componentType: ComponentType): T {
+        let component = this.getComponent<T>(entity, componentType);
+        if (component == null) {
+            throw new Error(`${componentType.name} not found.`);
+        }
+        return component;
+    }
+
     hasComponent(entity: Entity, componentType: ComponentType): boolean {
         return this.getComponent(entity, componentType) != null;
     }
@@ -104,7 +113,11 @@ class Entity {
     }
 
     get<T extends Component>(componentType: ComponentType): T {
-        return this.entityService.getComponent(this, componentType) as T;
+        return this.entityService.getComponent<T>(this, componentType);
+    }
+
+    require<T extends Component>(componentType: ComponentType): T {
+        return this.entityService.requireComponent<T>(this, componentType);
     }
 
     has(componentType: ComponentType): boolean {

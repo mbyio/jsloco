@@ -14,8 +14,8 @@ interface NumberMap<T> {
 }
 
 /*
- * Let's us use the Function.name feature (which is now supported in basically
- * all browsers but technically only works in ES6.
+ * Lets us use the Function.name feature (which is now supported in basically
+ * all browsers but technically only works in ES6).
  */
 interface Function {
     name: string;
