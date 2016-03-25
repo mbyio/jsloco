@@ -2,10 +2,16 @@
 /// <reference path="util.ts" />
 
 class EntityService implements Service {
-    constructor(private services: ServiceContainer, args: any) {}
-    init() {}
-
     private static idCounter = 0;
+
+    private services: ServiceContainer;
+
+    constructor(args: any) {
+    }
+
+    init(services: ServiceContainer) {
+        this.services = services;
+    }
 
     private entities: NumberMap<Entity> = {};
     private components: StringMap<NumberMap<Component>> = {};
@@ -16,7 +22,8 @@ class EntityService implements Service {
         return e;
     }
 
-    addComponent<T>(entity: Entity, componentType: ComponentType) {
+    addComponent<T extends Component>(
+            entity: Entity, componentType: ComponentType): T {
         if (this.entities[entity.id] == null) {
             throw new Error(`An entity with ID ${entity.id} does not exist.`);
         }
@@ -28,7 +35,9 @@ class EntityService implements Service {
         if (componentCollection[entity.id] != null) {
             throw new Error(`Entity ${entity.id} already has a ${componentType.name} component.`);
         }
-        componentCollection[entity.id] = new componentType(entity, this.services);
+        let component = new componentType(entity, this.services);
+        componentCollection[entity.id] = component;
+        return component as T;
     }
 
     getComponent<T extends Component>(
@@ -56,7 +65,7 @@ class EntityService implements Service {
         if (componentCollection == null) {
             return [];
         }
-        let matchingEntities = [];
+        let matchingEntities: Array<Entity> = [];
         entityLoop: for (let entityId in componentCollection) {
             if (!componentCollection.hasOwnProperty(entityId)) {
                 continue;
@@ -90,7 +99,11 @@ class Entity {
         return this._id;
     }
 
-    get<T>(componentType: ComponentType): T {
+    add<T extends Component>(componentType: ComponentType): T {
+        return this.entityService.addComponent<T>(this, componentType);
+    }
+
+    get<T extends Component>(componentType: ComponentType): T {
         return this.entityService.getComponent(this, componentType) as T;
     }
 
