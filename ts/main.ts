@@ -46,6 +46,18 @@ class MainState implements State {
             pos.x = Math.random() * 800;
             pos.y = Math.random() * 600;
         }
+        let e = this.entities.makeEntity();
+        let pos = e.add<PositionComponent>(PositionComponent);
+        pos.x = 0;
+        pos.y = 0;
+        let render = e.add<RenderingComponent>(RenderingComponent);
+        render.width = 32;
+        render.height = 32;
+        let img = new Image();
+        img.src = "assets/lego-logo.jpg";
+        img.addEventListener("load", () => {
+            render.sprite = new Sprite(img);
+        });
     }
 
     onExit() {

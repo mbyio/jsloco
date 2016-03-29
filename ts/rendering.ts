@@ -74,9 +74,53 @@ class Color {
     }
 }
 
+class Sprite {
+    private _img: HTMLImageElement;
+    private _srcX: number;
+    private _srcY: number;
+    private _srcWidth: number;
+    private _srcHeight: number;
+
+    constructor(img: HTMLImageElement,
+                srcX?: number,
+                srcY?: number,
+                srcWidth?: number,
+                srcHeight?: number) {
+        if (!img.complete || img.src == null || img.src.length === 0) {
+            throw new Error("Image has not fully loaded.");
+        }
+        this._img = img;
+        this._srcX = srcX || 0;
+        this._srcY = srcY || 0;
+        this._srcWidth = srcWidth || img.width;
+        this._srcHeight = srcHeight || img.height;
+    }
+
+    get img(): HTMLImageElement {
+        return this._img;
+    }
+
+    get srcX(): number {
+        return this._srcX;
+    }
+
+    get srcY(): number {
+        return this._srcY;
+    }
+
+    get srcWidth(): number {
+        return this._srcWidth;
+    }
+
+    get srcHeight(): number {
+        return this._srcHeight;
+    }
+}
+
 class RenderingComponent implements Component {
 
     tintColor: Color = null;
+    sprite: Sprite = null;
     _width: number;
     _height: number;
 
@@ -147,6 +191,16 @@ class RenderingService implements RunnableService {
         for (let renderable of renderables) {
             let pos = renderable.require<PositionComponent>(PositionComponent);
             let render = renderable.require<RenderingComponent>(RenderingComponent);
+
+            // Try to render a sprite
+            let sprite = render.sprite;
+            if (sprite != null) {
+                ctx.drawImage(sprite.img,
+                              sprite.srcX, sprite.srcY, sprite.srcWidth,
+                                sprite.srcHeight,
+                              pos.x, pos.y, render.width, render.height);
+            }
+            // Try to render a tint
             if (render.tintColor != null) {
                 ctx.fillStyle = render.tintColor.toCss();
                 ctx.fillRect(pos.x, pos.y, render.width, render.height);
