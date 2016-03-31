@@ -14,8 +14,7 @@ document.addEventListener("DOMContentLoaded", function() {
 function main() {
     let services = new ServiceContainer([
         {serviceType: GameLoopService, args:
-            [HelloWorldService, RenderingService]},
-        {serviceType: HelloWorldService},
+            [RenderingService]},
         {serviceType: EntityService},
         {serviceType: ViewportService, args: {
             width: 800, height: 600, id: "gameViewport"}},
@@ -37,7 +36,6 @@ class MainState implements State {
     onEnter() {
         for (let i = 0; i < 10; i++) {
             let e = this.entities.makeEntity();
-            e.add(HelloWorldComponent);
             let render = e.add<RenderingComponent>(RenderingComponent);
             render.tint = Color.makeRandomRGB();
             render.width = 32;

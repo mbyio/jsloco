@@ -11,7 +11,6 @@ class GameLoopService implements Service {
 
     init(services: ServiceContainer) {
         for (let runnableType of this.runnableTypes) {
-            console.log(runnableType);
             let service = services.require<RunnableService>(runnableType);
             // Needed because TypeScript isn't smart enough to figure out if
             // it's runnable or not.
@@ -25,7 +24,6 @@ class GameLoopService implements Service {
     }
 
     gameLoop() {
-        console.log("run");
         for (let runnable of this.runnables) {
             runnable.run();
         }
