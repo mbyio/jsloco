@@ -52,9 +52,14 @@ class MainState implements State {
         render.width = 32;
         render.height = 32;
         let img = new Image();
-        img.src = "assets/lego-logo.jpg";
+        img.src = "assets/sprite_ugly.png";
         img.addEventListener("load", () => {
-            render.addAnimation("default", [new Sprite(img)]);
+            let animation = [];
+            for (let i = 0; i < 4; i++) {
+                let x = i * 32;
+                animation.push(new Sprite(img, x, 0, 32, 32));
+            }
+            render.addAnimation("default", animation);
             render.switchTo("default");
         });
     }

@@ -120,9 +120,9 @@ class Sprite {
 
 class RenderingComponent implements Component {
     /*
-     * The time spent per frame in an animation (in seconds).
+     * The time spent per frame in an animation (in milliseconds).
      */
-    static TIME_PER_FRAME = 1 / 60;
+    static TIME_PER_FRAME = 1 / 20 * 1000;
 
     tint: Color = null;
     public width: number;
@@ -183,6 +183,11 @@ class RenderingService implements RunnableService {
     }
 
     run() {
+        let ctx = this.viewport.ctx;
+        let canvasWidth = ctx.canvas.width;
+        let canvasHeight = ctx.canvas.height;
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
         let renderables = this.entities.getEntitiesWithComponents([
             PositionComponent, RenderingComponent]);
 
@@ -210,7 +215,6 @@ class RenderingService implements RunnableService {
             }
         });
 
-        let ctx = this.viewport.ctx;
         for (let renderable of renderables) {
             let pos = renderable.require<PositionComponent>(PositionComponent);
             let render = renderable.require<RenderingComponent>(RenderingComponent);
