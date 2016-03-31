@@ -39,7 +39,7 @@ class MainState implements State {
             let e = this.entities.makeEntity();
             e.add(HelloWorldComponent);
             let render = e.add<RenderingComponent>(RenderingComponent);
-            render.tintColor = Color.makeRandomRGB();
+            render.tint = Color.makeRandomRGB();
             render.width = 32;
             render.height = 32;
             let pos = e.add<PositionComponent>(PositionComponent);
@@ -56,7 +56,8 @@ class MainState implements State {
         let img = new Image();
         img.src = "assets/lego-logo.jpg";
         img.addEventListener("load", () => {
-            render.sprite = new Sprite(img);
+            render.addAnimation("default", [new Sprite(img)]);
+            render.switchTo("default");
         });
     }
 

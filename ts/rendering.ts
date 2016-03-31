@@ -3,6 +3,7 @@
 /// <reference path="position.ts" />
 /// <reference path="gui.ts" />
 /// <reference path="gameloop.ts" />
+/// <reference path="util.ts" />
 
 class Color {
     private _r: number;
@@ -76,74 +77,96 @@ class Color {
 
 class Sprite {
     private _img: HTMLImageElement;
-    private _srcX: number;
-    private _srcY: number;
-    private _srcWidth: number;
-    private _srcHeight: number;
+    private _x: number;
+    private _y: number;
+    private _width: number;
+    private _height: number;
 
     constructor(img: HTMLImageElement,
-                srcX?: number,
-                srcY?: number,
-                srcWidth?: number,
-                srcHeight?: number) {
+                x?: number,
+                y?: number,
+                width?: number,
+                height?: number) {
         if (!img.complete || img.src == null || img.src.length === 0) {
             throw new Error("Image has not fully loaded.");
         }
         this._img = img;
-        this._srcX = srcX || 0;
-        this._srcY = srcY || 0;
-        this._srcWidth = srcWidth || img.width;
-        this._srcHeight = srcHeight || img.height;
+        this._x = x || 0;
+        this._y = y || 0;
+        this._width = width || img.width;
+        this._height = height || img.height;
     }
 
     get img(): HTMLImageElement {
         return this._img;
     }
 
-    get srcX(): number {
-        return this._srcX;
+    get x(): number {
+        return this._x;
     }
 
-    get srcY(): number {
-        return this._srcY;
+    get y(): number {
+        return this._y;
     }
 
-    get srcWidth(): number {
-        return this._srcWidth;
+    get width(): number {
+        return this._width;
     }
 
-    get srcHeight(): number {
-        return this._srcHeight;
+    get height(): number {
+        return this._height;
     }
 }
 
 class RenderingComponent implements Component {
+    /*
+     * The time spent per frame in an animation (in seconds).
+     */
+    static TIME_PER_FRAME = 1 / 60;
 
-    tintColor: Color = null;
-    sprite: Sprite = null;
-    _width: number;
-    _height: number;
+    tint: Color = null;
+    public width: number;
+    public height: number;
 
-    get width() {
-        return this._width;
-    }
+    private _currentAnimation: string = null;
+    private animations: StringMap<Array<Sprite>> = {};
+    private frameCounter = 0;
+    private switchTime = new Date().getTime();
 
-    set width(v: number) {
-        if (v < 0) {
-            throw new Error("Width must be positive.");
+    addAnimation(name: string, animation: Array<Sprite>) {
+        if (this.animations[name] != null) {
+            throw new Error(
+                `An animation with the name ${name} already exists.`);
         }
-        this._width = v;
-    }
-
-    get height() {
-        return this._height;
-    }
-
-    set height(v: number) {
-        if (v < 0) {
-            throw new Error("Height must be positive.");
+        if (animation.length === 0) {
+            throw new Error(
+                "An animation must consist of at least one sprite.");
         }
-        this._height = v;
+        this.animations[name] = animation;
+    }
+
+    switchTo(name: string) {
+        if (this.animations[name] == null) {
+            throw new Error(`No animation with the name ${name} exists.`);
+        }
+        this._currentAnimation = name;
+        this.switchTime = new Date().getTime();
+    }
+
+    get sprite() {
+        if (this._currentAnimation != null) {
+            let animation = this.animations[this._currentAnimation];
+            let time = new Date().getTime();
+            let frame = Math.floor((
+                    // Offset from when switchTo was called
+                    (time - this.switchTime)
+                    // Don't wrap around
+                    % (RenderingComponent.TIME_PER_FRAME * animation.length))
+                // Find out how many frame times have passed
+                / RenderingComponent.TIME_PER_FRAME);
+            return animation[frame];
+        }
+        return null;
     }
 }
 
@@ -196,13 +219,12 @@ class RenderingService implements RunnableService {
             let sprite = render.sprite;
             if (sprite != null) {
                 ctx.drawImage(sprite.img,
-                              sprite.srcX, sprite.srcY, sprite.srcWidth,
-                                sprite.srcHeight,
+                              sprite.x, sprite.y, sprite.width, sprite.height,
                               pos.x, pos.y, render.width, render.height);
             }
             // Try to render a tint
-            if (render.tintColor != null) {
-                ctx.fillStyle = render.tintColor.toCss();
+            if (render.tint != null) {
+                ctx.fillStyle = render.tint.toCss();
                 ctx.fillRect(pos.x, pos.y, render.width, render.height);
             }
         }
