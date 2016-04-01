@@ -6,16 +6,10 @@
 /// <reference path="util.ts" />
 
 class Color {
-    private _r: number;
-    private _g: number;
-    private _b: number;
-    private _a: number;
-
-    constructor(r?: number, g?: number, b?: number, a?: number) {
-        this.r = r || 255;
-        this.g = g || 255;
-        this.b = b || 255;
-        this.a = a || 255;
+    constructor(private _r: number,
+                private _g: number,
+                private _b: number,
+                private _a: number) {
     }
 
     get r() {
