@@ -44,6 +44,11 @@ class ViewportService implements Service {
 
         canvas.width = this._width;
         canvas.height = this._height;
+        this._viewportContainer.style.backgroundImage =
+            "url('assets/shitty_grass_tile.png')";
+        this._viewportContainer.style.position = "relative";
+        this._viewportContainer.style.width = `${this._width}px`;
+        this._viewportContainer.style.height = `${this._height}px`;
     }
 
     get height() {

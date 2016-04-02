@@ -34,16 +34,6 @@ class MainState implements State {
     }
 
     onEnter() {
-        for (let i = 0; i < 10; i++) {
-            let e = this.entities.makeEntity();
-            let render = e.add<RenderingComponent>(RenderingComponent);
-            render.tint = Color.makeRandomRGB();
-            render.width = 32;
-            render.height = 32;
-            let pos = e.add<PositionComponent>(PositionComponent);
-            pos.x = Math.random() * 800;
-            pos.y = Math.random() * 600;
-        }
         let e = this.entities.makeEntity();
         let pos = e.add<PositionComponent>(PositionComponent);
         pos.x = 0;
