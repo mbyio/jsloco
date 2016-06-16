@@ -1,0 +1,30 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.game-container {
+    background-color: black;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.viewport {
+    background-color: rgb(100, 149, 237);
+    background-image: url("assets/cracked_dirt_road.png");
+    width: 1024px;
+    height: 768px;
+}
+
+.sidebar {
+    width: 200px;
+    background-color: white;
+}

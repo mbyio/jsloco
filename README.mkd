@@ -1,0 +1,7 @@
+A clone of LEGO Loco for the web.
+
+# Assets
+
+- Cracked Dirt Road
+  - Originally from Mike Boyle
+    (https://www.flickr.com/photos/89081019@N00/3981893682)
