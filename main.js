@@ -34,6 +34,23 @@ class EntityManager {
         return e;
     }
 
+    hasComp(entity, compType) {
+        assertDefined(entity);
+        assertDefined(comp);
+
+        // Ignore unknown entities
+        if (!this.entities.has(entity)) {
+            return false;
+        }
+
+        let compsOfType = this.comps.get(compType.name);
+        if (compsOfType == null) {
+            return false;
+        }
+
+        return compsOfType.get(entity) != null;
+    }
+
     setComp(entity, comp) {
         assertDefined(entity);
         assertDefined(comp);
@@ -44,8 +61,8 @@ class EntityManager {
         }
 
         // Add a comp type if necessary
-        if (!this.comp.has(comp.constructor.name)) {
-            this.comp.set(comp.constructor.name, new Map());
+        if (!this.comps.has(comp.constructor.name)) {
+            this.comps.set(comp.constructor.name, new Map());
         }
 
         let compsOfType = this.comps.get(comps.constructor.name);
@@ -73,14 +90,67 @@ class EntityManager {
 
         // Deactivate the entity and remove all components
         this.entities.delete(entity);
-        for (let compsOfType of this.comps) {
+        for (let compsOfType of this.comps.values()) {
             compsOfType.delete(entity);
         }
     }
+
+    entitiesWithComps(compTypes) {
+        assertDefined(compTypes);
+
+        let out = [];
+
+        let firstCompType = compTypes[0];
+        if (firstCompType == null) {
+            return out;
+        }
+
+        // Iterate over entities with firstCompType, if they are missing any of
+        // the others then skip them, otherwise add them to out.
+        entities:
+        for (let entity of this.comps.get(firstCompType.name).keys()) {
+            for (let i = 1; i < compTypes.length; i++) {
+                let compType = compTypes[i];
+                if (!this.has(entity, compType.name)) {
+                    continue entities;
+                }
+            }
+            out.push(entity);
+        }
+
+        return out;
+    }
 }
 
+/**
+ * Represents an object in the grid and all the spaces they fill.
+ */
+class GridSpan {
+    constructor(coords, item) {
+        assertDefined(coords);
+        assertDefined(item);
+
+        this.__item = item;
+        this.__coords = coords;
+    }
+
+    get item() {
+        return this.__item;
+    }
+
+    get coords() {
+        return this.__coords;
+    }
+}
+
+/**
+ * A 2D grid. Objects may take up multiple spaces in the grid.
+ */
 class Grid {
     constructor(width, height) {
+        assertDefined(width);
+        assertDefined(height);
+
         this.__width = width;
         this.__height = height;
         this.__grid = [];
@@ -93,18 +163,39 @@ class Grid {
         }
     }
 
-    coordIsInBounds(x, y) {
-        return x >= 0 && x < this.__width && y >= 0 && y < this.__height;
+    coordIsInBounds(coord) {
+        assertDefined(coord);
+
+        return coord.x >= 0 && coord.x < this.__width
+            && coord.y >= 0 && coord.y < this.__height;
     }
 
-    get(x, y) {
-        return this.__grid[x][y];
-    }
+    get(coord) {
+        assertDefined(coord);
 
-    set(x, y, v) {
-        if (!this.coordIsInBounds(x, y)) {
-            return;
+        let span = this.__grid[coord.x][coord.y];
+        if (span == null) {
+            return null;
+        } else {
+            return this.__grid[coord.x][coord.y].item;
         }
-        this.__grid[x][y] = v;
+    }
+
+    setIfEmpty(coords, item) {
+        assertDefined(coords);
+        assertDefined(item);
+
+        // Make sure all coordinates are unoccupied and in the grid.
+        for (let coord of coords) {
+            if (!this.coordIsInBounds(coord) || this.get(coord) == null) {
+                return false;
+            }
+        }
+
+        let span = new GridSpan(coords, item);
+        for (let coord of coords) {
+            this.__grid[coord.x][coord.y] = span;
+        }
+        return true;
     }
 }
