@@ -1,5 +1,7 @@
-function assertDefined(var) {
-    if (var == null) {
+"use strict";
+
+function assertDefined(v) {
+    if (v == null) {
         throw new Error("assertDefined() failed.");
     }
 }
@@ -18,7 +20,11 @@ class Entity {
     }
 
     get(compType) {
-        this.__manager.getComp(this, compTypeName);
+        this.__manager.getComp(this, compType);
+    }
+
+    has(compType) {
+        this.__manager.hasComp(this, compType);
     }
 }
 
@@ -36,7 +42,7 @@ class EntityManager {
 
     hasComp(entity, compType) {
         assertDefined(entity);
-        assertDefined(comp);
+        assertDefined(compType);
 
         // Ignore unknown entities
         if (!this.entities.has(entity)) {
@@ -65,7 +71,7 @@ class EntityManager {
             this.comps.set(comp.constructor.name, new Map());
         }
 
-        let compsOfType = this.comps.get(comps.constructor.name);
+        let compsOfType = this.comps.get(comp.constructor.name);
         compsOfType.set(entity, comp);
     }
 
@@ -123,27 +129,6 @@ class EntityManager {
 }
 
 /**
- * Represents an object in the grid and all the spaces they fill.
- */
-class GridSpan {
-    constructor(coords, item) {
-        assertDefined(coords);
-        assertDefined(item);
-
-        this.__item = item;
-        this.__coords = coords;
-    }
-
-    get item() {
-        return this.__item;
-    }
-
-    get coords() {
-        return this.__coords;
-    }
-}
-
-/**
  * A 2D grid. Objects may take up multiple spaces in the grid.
  */
 class Grid {
@@ -177,25 +162,102 @@ class Grid {
         if (span == null) {
             return null;
         } else {
-            return this.__grid[coord.x][coord.y].item;
+            return this.__grid[coord.x][coord.y].entity;
         }
     }
 
-    setIfEmpty(coords, item) {
+    setIfEmpty(entity, coords) {
+        assertDefined(entity);
         assertDefined(coords);
-        assertDefined(item);
 
-        // Make sure all coordinates are unoccupied and in the grid.
+        if (coords.length == 0) {
+            throw new Error("At least one grid coordinate required.");
+        }
+
+        // Make sure all coordinates are valid and empty
         for (let coord of coords) {
-            if (!this.coordIsInBounds(coord) || this.get(coord) == null) {
+            if (!this.coordIsInBounds(coord) || this.get(coord) != null) {
                 return false;
             }
         }
 
-        let span = new GridSpan(coords, item);
-        for (let coord of coords) {
-            this.__grid[coord.x][coord.y] = span;
+        // Entities should either have a free position or grid position.
+        if (entity.has(FreePosition)) {
+            throw new Error("Entity has a free position component already.");
         }
-        return true;
+
+        // If the entity already has a grid position, remove it from the grid.
+        // Otherwise make a new component.
+        let gridPosition = entity.get(GridPosition);
+        if (gridPosition != null) {
+            for (let coord of gridPosition.coords) {
+                this.__grid[coord.x][coord.y] = null;
+            }
+            gridPosition.coords = coords;
+        } else {
+            gridPosition = new GridPosition(entity, coords);
+            entity.set(gridPosition);
+        }
+
+        for (let coord of gridPosition.coords) {
+            this.__grid[coord.x][coord.y] = gridPosition;
+        }
     }
+}
+
+/*******************************************************************************
+ * Components
+ ******************************************************************************/
+
+class FreePosition {
+    constructor(entity, x, y) {
+        assertDefined(entity);
+
+        this.entity = entity;
+        this.x = x || 0;
+        this.y = y || 0;
+    }
+}
+
+class GridPosition {
+    constructor(entity, coords) {
+        assertDefined(entity);
+        assertDefined(coords);
+
+        if (coords.length == 0) {
+            throw new Error("At least one grid coordinate required.");
+        }
+
+        this.entity = entity;
+        this.coords = coords;
+
+        let x = Number.NEGATIVE_INFINITY;
+        let y = Number.NEGATIVE_INFINITY;
+        for (let coord of coords) {
+            x = Math.max(coord.x, x);
+            y = Math.max(coord.y, y);
+        }
+
+        this.x = x;
+        this.y = y;
+    }
+}
+
+function main() {
+    let entityManager = new EntityManager();
+    let grid = new Grid(200, 200);
+
+    for (let i = 0; i < 10; i++) {
+        let entity = entityManager.makeEntity();
+        let coords = [];
+        for (let x = i * 10; x < i * 10 + 10; x++) {
+            for (let y = i * 10; y < i * 10 + 10; y++) {
+                coords.push({x: x, y: y});
+            }
+        }
+        if (grid.setIfEmpty(entity, coords) == false) {
+            throw new Error("Overlapping entities.");
+        }
+    }
+    console.log(entityManager);
 }
