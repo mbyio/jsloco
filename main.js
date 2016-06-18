@@ -128,6 +128,10 @@ class EntityManager {
     }
 }
 
+/*******************************************************************************
+ * Grid
+ ******************************************************************************/
+
 /**
  * A 2D grid. Objects may take up multiple spaces in the grid.
  */
@@ -205,20 +209,6 @@ class Grid {
     }
 }
 
-/*******************************************************************************
- * Components
- ******************************************************************************/
-
-class FreePosition {
-    constructor(entity, x, y) {
-        assertDefined(entity);
-
-        this.entity = entity;
-        this.x = x || 0;
-        this.y = y || 0;
-    }
-}
-
 class GridPosition {
     constructor(entity, coords) {
         assertDefined(entity);
@@ -240,6 +230,20 @@ class GridPosition {
 
         this.x = x;
         this.y = y;
+    }
+}
+
+/*******************************************************************************
+ * Components
+ ******************************************************************************/
+
+class FreePosition {
+    constructor(entity, x, y) {
+        assertDefined(entity);
+
+        this.entity = entity;
+        this.x = x || 0;
+        this.y = y || 0;
     }
 }
 
