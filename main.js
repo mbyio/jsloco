@@ -248,6 +248,56 @@ class FreePosition {
 }
 
 /*******************************************************************************
+ * Game
+ ******************************************************************************/
+
+class Game {
+    constructor(services) {
+        assertDefined(services);
+
+        this.services = new Map();
+        for (let service of services) {
+            this.services.set(service.constructor.name, service);
+        }
+
+        this.__requestId = null;
+    }
+
+    get isRunning() {
+        return this.__requestId != null;
+    }
+
+    get(serviceType) {
+        assertDefined(serviceType);
+
+        this.services.get(serviceType.name);
+    }
+
+    start() {
+        if (this.isRunning) {
+            throw new Error("Game is already running.");
+        }
+        this.__requestId = window.requestAnimationFrame(
+            () => {
+                this.__gameLoop();
+            }
+        );
+    }
+
+    stop() {
+        if (!this.isRunning) {
+            throw new Error("Game is not running.");
+        }
+        window.cancelAnimationFrame(this.__requestId);
+        this.__requestId = null;
+    }
+
+    __gameLoop() {
+
+    }
+}
+
+/*******************************************************************************
  * Main
  ******************************************************************************/
 
