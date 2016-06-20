@@ -338,7 +338,8 @@ class Game {
     }
 
     __gameLoop() {
-
+        console.log("loop");
+        window.requestAnimationFrame(() => { this.__gameLoop(); });
     }
 }
 
@@ -350,6 +351,8 @@ function main() {
     let entityManager = new EntityManager();
     let grid = new Grid(200, 200);
     let canvas = new Canvas(document.getElementById("viewport"), 1024, 768);
+    let game = new Game([entityManager, grid, canvas]);
+    game.start();
 
     for (let i = 0; i < 10; i++) {
         let entity = entityManager.makeEntity();
