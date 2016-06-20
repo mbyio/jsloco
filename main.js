@@ -252,6 +252,47 @@ class FreePosition {
 }
 
 /*******************************************************************************
+ * Canvas
+ ******************************************************************************/
+
+class Canvas {
+    constructor(container, width, height) {
+        assertDefined(container);
+        assertDefined(width);
+        assertDefined(height);
+
+        let canvas = document.createElement("canvas");
+        assertDefined(canvas);
+
+        canvas.width = width;
+        canvas.height = height;
+
+        container.appendChild(canvas);
+
+        this.__canvas = canvas;
+        this.__ctx = canvas.getContext('2d');
+        this.__width = width;
+        this.__height = height;
+    }
+
+    get canvas() {
+        return this.__canvas;
+    }
+
+    get ctx() {
+        return this.__ctx;
+    }
+
+    get width() {
+        return this.__width;
+    }
+
+    get height() {
+        return this.__height;
+    }
+}
+
+/*******************************************************************************
  * Game
  ******************************************************************************/
 
@@ -308,6 +349,7 @@ class Game {
 function main() {
     let entityManager = new EntityManager();
     let grid = new Grid(200, 200);
+    let canvas = new Canvas(document.getElementById("viewport"), 1024, 768);
 
     for (let i = 0; i < 10; i++) {
         let entity = entityManager.makeEntity();
