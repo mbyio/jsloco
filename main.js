@@ -255,7 +255,7 @@ class FreePosition {
  * Canvas
  ******************************************************************************/
 
-class Canvas {
+class Canvas extends Service {
     constructor(container, width, height) {
         assertDefined(container);
         assertDefined(width);
@@ -293,6 +293,20 @@ class Canvas {
 }
 
 /*******************************************************************************
+ * Service Types
+ ******************************************************************************/
+
+class Service {
+    init(game) {
+    }
+}
+
+class RunnableService extends Service {
+    run() {
+    }
+}
+
+/*******************************************************************************
  * Game
  ******************************************************************************/
 
@@ -300,9 +314,25 @@ class Game {
     constructor(services) {
         assertDefined(services);
 
+        // Collect all services for retrieval.
         this.services = new Map();
         for (let service of services) {
             this.services.set(service.constructor.name, service);
+        }
+
+        // Ordered list of services to run every frame.
+        this.runnableServices = [];
+        for (let service of services) {
+            if (service instanceof RunnableService) {
+                this.runnableServices.push(service);
+            }
+        }
+
+        // Initialize any services that need it.
+        for (let service of services) {
+            if (service instanceof Service) {
+                service.init(this);
+            }
         }
 
         this.__requestId = null;
@@ -338,8 +368,29 @@ class Game {
     }
 
     __gameLoop() {
-        console.log("loop");
+        for (let runnable of this.runnableServices) {
+            runnable.run();
+        }
+
         window.requestAnimationFrame(() => { this.__gameLoop(); });
+    }
+}
+
+/*******************************************************************************
+ * Graphics
+ ******************************************************************************/
+
+class GraphicsComp {
+    constructor(renderable) {
+        this.renderable = renderable;
+    }
+}
+
+class RectRenderable {
+    constructor(width, height, color) {
+        this.width = width;
+        this.height = height;
+        this.color = color;
     }
 }
 
